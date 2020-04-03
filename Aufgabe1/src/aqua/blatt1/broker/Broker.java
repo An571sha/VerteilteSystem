@@ -9,9 +9,10 @@ import aqua.blatt1.common.msgtypes.RegisterResponse;
 import messaging.Endpoint;
 import messaging.Message;
 
+import java.io.Serializable;
 import java.net.InetSocketAddress;
 
-/*compile an entire directory -  javac $(find . -name "*.java")*/
+/*compile an entire directory -  javac $(find . -name "*.java") */
 
 public class Broker {
 
@@ -21,41 +22,52 @@ public class Broker {
     private int counter = 0;
 
 
-    public Broker() {
+    private Broker() {
         this.endpoint = new Endpoint(portNumber);
         this.clientCollection = new ClientCollection<>();
     }
 
-    public void broker(){
-        while(true){
+    private void broker(){
+
+        do {
+
             Message message = endpoint.blockingReceive();
-            if(message.getPayload() instanceof RegisterResponse) {
+            if (message.getPayload() instanceof RegisterRequest) {
                 register(message);
+
             } else if (message.getPayload() instanceof DeregisterRequest) {
-                deregister((DeregisterRequest) message.getPayload());
+                deregister(message);
+
             } else if (message.getPayload() instanceof HandoffRequest) {
                 handOffFish(message);
             }
-        }
+
+        } while (true);
     }
 
-    public void register(Message message){
+    private void register(Message message){
         InetSocketAddress sender = message.getSender();
         String clientName = "Tank" + counter;
         clientCollection.add(clientName,sender);
+        System.out.println(clientName + ":" + sender.getHostString());
         RegisterResponse registerResponse =  new RegisterResponse(clientName);
         endpoint.send(sender,registerResponse);
         counter++;
     }
 
-    public void deregister(DeregisterRequest payload){
+
+    private void deregister(Message message){
+        DeregisterRequest payload = (DeregisterRequest) message.getPayload();
         String senderId = payload.getId();
-        if(clientCollection.size() != 0) {
+
+        System.out.println("removing" + ":" + payload.getId());
+
+        if (clientCollection.size() != 0) {
             clientCollection.remove(clientCollection.indexOf(senderId));
         }
     }
 
-    public void handOffFish(Message message){
+    private void handOffFish(Message message){
         InetSocketAddress receiver;
         HandoffRequest request = (HandoffRequest) message.getPayload();
         FishModel fish = request.getFish();
@@ -66,6 +78,7 @@ public class Broker {
         if(direction == Direction.LEFT) {
 
             receiver = clientCollection.getLeftNeighorOf(index);
+
         } else {
 
             receiver = clientCollection.getRightNeighorOf(index);
