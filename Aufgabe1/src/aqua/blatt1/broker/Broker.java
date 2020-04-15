@@ -9,13 +9,14 @@ import aqua.blatt1.common.msgtypes.RegisterResponse;
 import messaging.Endpoint;
 import messaging.Message;
 
+import javax.swing.*;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-/*compile an entire directory -  javac $(find . -name "*.java") */
+/* compile an entire directory -  javac $(find . -name "*.java") */
 
 public class Broker {
 
@@ -24,15 +25,33 @@ public class Broker {
     private final int portNumber = 4711;
     private final int nThreads = 5;
     private int counter = 0;
+    private boolean stopRequested;
 
 
     private Broker() {
         this.endpoint = new Endpoint(portNumber);
         this.clientCollection = new ClientCollection<>();
+        this.stopRequested =  false;
     }
 
     private void broker(){
         ExecutorService executorService = Executors.newFixedThreadPool(nThreads);
+
+        Thread dialogBoxThread =  new Thread(() -> {
+            int res = JOptionPane.showOptionDialog(null,
+                    "Press Ok button to stop server","",
+                    JOptionPane.DEFAULT_OPTION,
+                    JOptionPane.INFORMATION_MESSAGE,
+                    null,
+                    null,
+                    null);
+            if(res == 0) {
+                stopRequested = true;
+            }
+
+        });
+
+        dialogBoxThread.start();
 
         do {
             Message message = endpoint.blockingReceive();
@@ -49,8 +68,7 @@ public class Broker {
                 }
             });
 
-        } while (true);
-
+        } while (!stopRequested);
     }
 
     public static void main(final String[] args) {
