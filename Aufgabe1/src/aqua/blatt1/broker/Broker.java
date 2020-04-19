@@ -45,8 +45,9 @@ public class Broker {
                     null,
                     null,
                     null);
-            if(res == 0) {
+            if (res == 0) {
                 stopRequested = true;
+                System.exit(0);
             }
 
         });
@@ -65,6 +66,9 @@ public class Broker {
 
                 } else if (message.getPayload() instanceof HandoffRequest) {
                     brokerTask.handOffFish(message);
+
+                } else if(message.getPayload() instanceof PoisonPill){
+                    System.exit(0);
                 }
             });
 
