@@ -1,11 +1,8 @@
-package aqua.blatt1.broker;
+package aqua.broker;
 
-import aqua.blatt1.common.Direction;
-import aqua.blatt1.common.FishModel;
-import aqua.blatt1.common.msgtypes.DeregisterRequest;
-import aqua.blatt1.common.msgtypes.HandoffRequest;
-import aqua.blatt1.common.msgtypes.RegisterRequest;
-import aqua.blatt1.common.msgtypes.RegisterResponse;
+import aqua.common.Direction;
+import aqua.common.FishModel;
+import aqua.common.msgtypes.*;
 import messaging.Endpoint;
 import messaging.Message;
 
@@ -36,7 +33,6 @@ public class Broker {
 
     private void broker(){
         ExecutorService executorService = Executors.newFixedThreadPool(nThreads);
-
         Thread dialogBoxThread =  new Thread(() -> {
             int res = JOptionPane.showOptionDialog(null,
                     "Press Ok button to stop server","",
@@ -96,6 +92,23 @@ public class Broker {
             clientCollection.add(clientName,sender);
             lock.writeLock().unlock();
 
+            lock.readLock().lock();
+
+            if (clientCollection.size() != 0) {
+               NeigbourUpdate neigbourUpdate = new NeigbourUpdate(clientName,
+                       clientCollection.getLeftNeighorOf(clientCollection.indexOf(clientName)),
+                       clientCollection.getRightNeighorOf(clientCollection.indexOf(clientName)));
+
+               endpoint.send(sender, neigbourUpdate);
+            } else {
+                NeigbourUpdate neigbourUpdate = new NeigbourUpdate(clientName,
+                        clientCollection.getClient(clientCollection.indexOf(clientName)),
+                        clientCollection.getClient(clientCollection.indexOf(clientName)));
+                endpoint.send(sender, neigbourUpdate);
+            }
+
+            lock.readLock().unlock();
+
             System.out.println(clientName + ":" + sender.getHostString());
             RegisterResponse registerResponse =  new RegisterResponse(clientName);
             endpoint.send(sender,registerResponse);
@@ -111,6 +124,11 @@ public class Broker {
             if (clientCollection.size() != 0) {
                 lock.readLock().lock();
                 clientCollection.remove(clientCollection.indexOf(senderId));
+                NeigbourUpdate neigbourUpdate = new NeigbourUpdate(senderId,
+                        clientCollection.getLeftNeighorOf(clientCollection.indexOf(senderId)),
+                        clientCollection.getRightNeighorOf(clientCollection.indexOf(senderId)));
+
+                endpoint.send(message.getSender(), neigbourUpdate);
                 lock.readLock().unlock();
             }
         }

@@ -1,15 +1,12 @@
-package aqua.blatt1.client;
+package aqua.client;
 
 import java.net.InetSocketAddress;
 
+import aqua.common.FishModel;
+import aqua.common.Properties;
+import aqua.common.msgtypes.*;
 import messaging.Endpoint;
 import messaging.Message;
-import aqua.blatt1.common.FishModel;
-import aqua.blatt1.common.Properties;
-import aqua.blatt1.common.msgtypes.DeregisterRequest;
-import aqua.blatt1.common.msgtypes.HandoffRequest;
-import aqua.blatt1.common.msgtypes.RegisterRequest;
-import aqua.blatt1.common.msgtypes.RegisterResponse;
 
 public class ClientCommunicator {
 	private final Endpoint endpoint;
@@ -48,13 +45,19 @@ public class ClientCommunicator {
 		@Override
 		public void run() {
 			while (!isInterrupted()) {
+				// could be complete bullshit need to debug and check
 				Message msg = endpoint.blockingReceive();
+				NeigbourUpdate neigbourUpdate = new NeigbourUpdate(((NeigbourUpdate) msg.getPayload()).getId(), ((NeigbourUpdate) msg.getPayload()).getLeft(), ((NeigbourUpdate) msg.getPayload()).getRight());
 
 				if (msg.getPayload() instanceof RegisterResponse)
 					tankModel.onRegistration(((RegisterResponse) msg.getPayload()).getId());
 
 				if (msg.getPayload() instanceof HandoffRequest)
 					tankModel.receiveFish(((HandoffRequest) msg.getPayload()).getFish());
+
+				if(msg.getPayload() instanceof NeigbourUpdate)
+					tankModel.getLeftSocketAddressOfNeighbour(neigbourUpdate);
+					tankModel.getRightSocketAddressOfNeighbour(neigbourUpdate);
 
 			}
 			System.out.println("Receiver stopped.");

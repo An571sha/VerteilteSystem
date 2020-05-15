@@ -1,4 +1,4 @@
-package aqua.blatt1.client;
+package aqua.client;
 
 import java.awt.Component;
 import java.awt.event.ActionEvent;

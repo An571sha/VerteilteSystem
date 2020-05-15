@@ -1,5 +1,6 @@
-package aqua.blatt1.client;
+package aqua.client;
 
+import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Observable;
@@ -8,8 +9,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import aqua.blatt1.common.Direction;
-import aqua.blatt1.common.FishModel;
+import aqua.common.Direction;
+import aqua.common.FishModel;
+import aqua.common.msgtypes.NeigbourUpdate;
 
 public class TankModel extends Observable implements Iterable<FishModel> {
 
@@ -42,6 +44,14 @@ public class TankModel extends Observable implements Iterable<FishModel> {
 
 			fishies.add(fish);
 		}
+	}
+
+	public InetSocketAddress getLeftSocketAddressOfNeighbour(NeigbourUpdate neigbourUpdate){
+		return neigbourUpdate.getLeft();
+	}
+
+	public InetSocketAddress getRightSocketAddressOfNeighbour(NeigbourUpdate neigbourUpdate){
+		return neigbourUpdate.getRight();
 	}
 
 	synchronized void receiveFish(FishModel fish) {

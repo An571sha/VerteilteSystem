@@ -1,4 +1,4 @@
-package aqua.blatt1.common.msgtypes;
+package aqua.common.msgtypes;
 
 import java.io.Serializable;
 

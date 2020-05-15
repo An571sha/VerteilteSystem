@@ -1,4 +1,4 @@
-package aqua.blatt1.common;
+package aqua.common;
 
 public class Properties {
 	public final static String HOST = "localhost";

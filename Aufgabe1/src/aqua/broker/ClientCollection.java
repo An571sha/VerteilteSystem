@@ -1,4 +1,4 @@
-package aqua.blatt1.broker;
+package aqua.broker;
 
 import java.util.ArrayList;
 import java.util.List;

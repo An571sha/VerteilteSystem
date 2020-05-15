@@ -1,16 +1,17 @@
-package aqua.blatt1.common.msgtypes;
+package aqua.common.msgtypes;
 
 import java.io.Serializable;
 
 @SuppressWarnings("serial")
-public final class DeregisterRequest implements Serializable {
+public final class RegisterResponse implements Serializable {
 	private final String id;
 
-	public DeregisterRequest(String id) {
+	public RegisterResponse(String id) {
 		this.id = id;
 	}
 
 	public String getId() {
 		return id;
 	}
+
 }

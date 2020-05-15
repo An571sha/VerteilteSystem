@@ -1,4 +1,4 @@
-package aqua.blatt1.client;
+package aqua.client;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -12,7 +12,7 @@ import java.util.Observer;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-import aqua.blatt1.common.FishModel;
+import aqua.common.FishModel;
 
 @SuppressWarnings("serial")
 public class TankView extends JPanel implements Observer {
