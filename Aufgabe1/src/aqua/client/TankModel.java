@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import aqua.common.Direction;
 import aqua.common.FishModel;
 import aqua.common.msgtypes.NeigbourUpdate;
+import aqua.common.msgtypes.Token;
 
 public class TankModel extends Observable implements Iterable<FishModel> {
 
@@ -23,6 +24,35 @@ public class TankModel extends Observable implements Iterable<FishModel> {
 	protected final Set<FishModel> fishies;
 	protected int fishCounter = 0;
 	protected final ClientCommunicator.ClientForwarder forwarder;
+	public InetSocketAddress leftNeigbour = null;
+	public InetSocketAddress rightNeigbour = null;
+	public InetSocketAddress currentClient = null;
+
+	public volatile boolean tokenHandler;
+
+	public InetSocketAddress getLeftNeigbour() {
+		return leftNeigbour;
+	}
+
+	public void setLeftNeigbour(InetSocketAddress leftNeigbour) {
+		this.leftNeigbour = leftNeigbour;
+	}
+
+	public InetSocketAddress getRightNeigbour() {
+		return rightNeigbour;
+	}
+
+	public void setRightNeigbour(InetSocketAddress rightNeigbour) {
+		this.rightNeigbour = rightNeigbour;
+	}
+
+	public InetSocketAddress getCurrentClient() {
+		return currentClient;
+	}
+
+	public void setCurrentClient(InetSocketAddress currentClient) {
+		this.currentClient = currentClient;
+	}
 
 	public TankModel(ClientCommunicator.ClientForwarder forwarder) {
 		this.fishies = Collections.newSetFromMap(new ConcurrentHashMap<FishModel, Boolean>());
@@ -78,7 +108,7 @@ public class TankModel extends Observable implements Iterable<FishModel> {
 			fish.update();
 
 			if (fish.hitsEdge())
-				forwarder.handOff(fish);
+				forwarder.handOff(fish, this);
 
 			if (fish.disappears())
 				it.remove();

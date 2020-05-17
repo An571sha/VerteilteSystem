@@ -2,6 +2,7 @@ package aqua.client;
 
 import java.net.InetSocketAddress;
 
+import aqua.common.Direction;
 import aqua.common.FishModel;
 import aqua.common.Properties;
 import aqua.common.msgtypes.*;
@@ -30,8 +31,12 @@ public class ClientCommunicator {
 			endpoint.send(broker, new DeregisterRequest(id));
 		}
 
-		public void handOff(FishModel fish) {
-			endpoint.send(broker, new HandoffRequest(fish));
+		public void handOff(FishModel fish, TankModel model) {
+			if(fish.getDirection() == Direction.LEFT) {
+				endpoint.send(model.getLeftNeigbour(), new HandoffRequest(fish));
+			}else{
+				endpoint.send(model.getRightNeigbour(), new HandoffRequest(fish));
+			}
 		}
 	}
 
@@ -46,8 +51,8 @@ public class ClientCommunicator {
 		public void run() {
 			while (!isInterrupted()) {
 				// could be complete bullshit need to debug and check
+				// spoiler alert, (msg.getPayload() instanceof NeigbourUpdate) is complete bullshit
 				Message msg = endpoint.blockingReceive();
-				NeigbourUpdate neigbourUpdate = new NeigbourUpdate(((NeigbourUpdate) msg.getPayload()).getId(), ((NeigbourUpdate) msg.getPayload()).getLeft(), ((NeigbourUpdate) msg.getPayload()).getRight());
 
 				if (msg.getPayload() instanceof RegisterResponse)
 					tankModel.onRegistration(((RegisterResponse) msg.getPayload()).getId());
@@ -55,10 +60,10 @@ public class ClientCommunicator {
 				if (msg.getPayload() instanceof HandoffRequest)
 					tankModel.receiveFish(((HandoffRequest) msg.getPayload()).getFish());
 
-				if(msg.getPayload() instanceof NeigbourUpdate)
-					tankModel.getLeftSocketAddressOfNeighbour(neigbourUpdate);
-					tankModel.getRightSocketAddressOfNeighbour(neigbourUpdate);
-
+				if(msg.getPayload() instanceof NeigbourUpdate) {
+					tankModel.setLeftNeigbour(((NeigbourUpdate) msg.getPayload()).getLeft());
+					tankModel.setRightNeigbour(((NeigbourUpdate) msg.getPayload()).getRight());
+				}
 			}
 			System.out.println("Receiver stopped.");
 		}

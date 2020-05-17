@@ -91,24 +91,47 @@ public class Broker {
             lock.writeLock().lock();
             clientCollection.add(clientName,sender);
             lock.writeLock().unlock();
-
+            System.out.println("size before" + clientCollection.size());
             lock.readLock().lock();
+            if (clientCollection.size() == 1) {
 
-            if (clientCollection.size() != 0) {
-               NeigbourUpdate neigbourUpdate = new NeigbourUpdate(clientName,
-                       clientCollection.getLeftNeighorOf(clientCollection.indexOf(clientName)),
-                       clientCollection.getRightNeighorOf(clientCollection.indexOf(clientName)));
-
-               endpoint.send(sender, neigbourUpdate);
-            } else {
                 NeigbourUpdate neigbourUpdate = new NeigbourUpdate(clientName,
-                        clientCollection.getClient(clientCollection.indexOf(clientName)),
-                        clientCollection.getClient(clientCollection.indexOf(clientName)));
+                        sender, sender);
+                System.out.println("Register first neighbour update" + clientName +
+                        clientCollection.indexOf(neigbourUpdate.getLeft().toString()) + " " +
+                        clientCollection.indexOf(neigbourUpdate.getRight().toString()));
                 endpoint.send(sender, neigbourUpdate);
+
+            } else {
+
+                InetSocketAddress leftNeighbour = clientCollection.getLeftNeighorOf(clientCollection.indexOf(sender));
+                InetSocketAddress rightNeighbour = clientCollection.getClient(0);
+
+                NeigbourUpdate neigbourUpdate = new NeigbourUpdate(clientName,
+                        leftNeighbour,
+                        rightNeighbour);
+
+                NeigbourUpdate leftNeigbourUpdate = new NeigbourUpdate("left",
+                        clientCollection.getLeftNeighorOf(clientCollection.indexOf(leftNeighbour)),
+                        sender);
+
+                NeigbourUpdate rightNeigbourUpdate = new NeigbourUpdate("right",
+                       sender,
+                       clientCollection.getRightNeighorOf(clientCollection.indexOf(rightNeighbour)));
+
+                System.out.println("Register next neighbour update" + clientName +
+                        clientCollection.indexOf(neigbourUpdate.getLeft().toString()) + " " +
+                        clientCollection.indexOf(neigbourUpdate.getRight().toString()));
+
+                endpoint.send(sender, neigbourUpdate);
+                endpoint.send(leftNeighbour, leftNeigbourUpdate);
+                endpoint.send(rightNeighbour, rightNeigbourUpdate);
+
+
             }
-
             lock.readLock().unlock();
-
+            System.out.println("size after" + clientCollection.size());
+            System.out.println("collection -" + clientCollection.toString());
             System.out.println(clientName + ":" + sender.getHostString());
             RegisterResponse registerResponse =  new RegisterResponse(clientName);
             endpoint.send(sender,registerResponse);
@@ -122,14 +145,28 @@ public class Broker {
             System.out.println("removing" + ":" + payload.getId());
 
             if (clientCollection.size() != 0) {
-                lock.readLock().lock();
-                clientCollection.remove(clientCollection.indexOf(senderId));
-                NeigbourUpdate neigbourUpdate = new NeigbourUpdate(senderId,
-                        clientCollection.getLeftNeighorOf(clientCollection.indexOf(senderId)),
-                        clientCollection.getRightNeighorOf(clientCollection.indexOf(senderId)));
 
-                endpoint.send(message.getSender(), neigbourUpdate);
+                lock.writeLock().lock();
+                clientCollection.remove(clientCollection.indexOf(senderId));
+                lock.writeLock().unlock();
+
+                lock.readLock().lock();
+                InetSocketAddress leftNeighbour = clientCollection.getLeftNeighorOf(clientCollection.indexOf(senderId));
+                InetSocketAddress rightNeighbour = clientCollection.getRightNeighorOf(clientCollection.indexOf(senderId));
+                NeigbourUpdate leftNeigbourUpdate = new NeigbourUpdate("left",
+                        clientCollection.getLeftNeighorOf(clientCollection.indexOf(leftNeighbour)),
+                        rightNeighbour);
+
+                NeigbourUpdate rightNeigbourUpdate = new NeigbourUpdate("right",
+                        leftNeighbour,
+                        clientCollection.getRightNeighorOf(clientCollection.indexOf(rightNeighbour)));
+
+                System.out.println("Dereigster next neighbour update" + senderId + leftNeigbourUpdate.getLeft().getAddress().toString() + leftNeigbourUpdate.getRight().getAddress().toString());
+
                 lock.readLock().unlock();
+                endpoint.send(message.getSender(), leftNeigbourUpdate);
+                endpoint.send(message.getSender(), rightNeigbourUpdate);
+
             }
         }
 
