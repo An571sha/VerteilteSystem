@@ -51,7 +51,7 @@ public class Endpoint
         }
     }
 
-    private Message readDatagram(final DatagramPacket datagram) {
+    public Message readDatagram(final DatagramPacket datagram) {
         try {
             final ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(datagram.getData()));
             return new Message((Serializable)ois.readObject(), (InetSocketAddress)datagram.getSocketAddress());

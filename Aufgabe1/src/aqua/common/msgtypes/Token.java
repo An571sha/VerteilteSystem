@@ -18,6 +18,4 @@ public class Token implements Serializable {
         this.token = token;
     }
 
-
-
 }
